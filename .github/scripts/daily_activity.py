@@ -1,86 +1,64 @@
-#!/usr/bin/env python3
-# .github/scripts/daily_activity.py
-# Runs inside GitHub Actions. Uses PyGithub.
-
-import os
-import random
-import time
-import uuid
-import sys
 from github import Github
-from datetime import datetime, timezone
+import random
+import os
 
-GH_TOKEN = os.environ.get("GH_TOKEN")
-REPO_NAME = os.environ.get("REPO_NAME", "LittleCodr/profile-booster")
+# Auth and repo setup
+token = os.getenv("GITHUB_TOKEN")
+email = os.getenv("GITHUB_EMAIL")
+repo_name = os.getenv("GITHUB_REPOSITORY")
 
-if not GH_TOKEN:
-    print("ERROR: GH_TOKEN not found in environment.")
-    sys.exit(1)
+g = Github(token)
+repo = g.get_repo(repo_name)
 
-g = Github(GH_TOKEN)
-repo = g.get_repo(REPO_NAME)
+# ---- Editable values ----
+COMMITS = 20
+PULL_REQUESTS = 400    # <--- change this number for PRs
+CODE_REVIEWS = 250     # <--- change this number for reviews
+ISSUES = 150           # <--- change this number for issues
+# --------------------------
 
-# Total actions today: random between 50 and 60
-total_actions = random.randint(50, 60)
-print(f"Running {total_actions} actions on {REPO_NAME}")
+def simulate_commits():
+    print(f"Simulating {COMMITS} commits...")
+    file_path = "dummy_file.txt"
 
-created_pr_numbers = []
+    # Check if file exists in repo
+    contents = repo.get_contents(file_path)
+    sha = contents.sha
 
-for i in range(total_actions):
-    action = random.choices(["pr", "issue", "review"], weights=[0.5, 0.3, 0.2], k=1)[0]
-    try:
-        if action == "pr":
-            # create a new branch and file, then a PR
-            ts = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-            shortid = uuid.uuid4().hex[:6]
-            branch_name = f"auto/pr/{ts}/{shortid}"
-            source = repo.get_branch(repo.default_branch)
-            repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=source.commit.sha)
+    for i in range(COMMITS):
+        new_content = contents.decoded_content.decode() + f"\nCommit #{i+1}"
+        repo.update_file(
+            path=file_path,
+            message=f"Commit #{i+1}",
+            content=new_content,
+            sha=sha
+        )
+        print(f"✅ Commit #{i+1} pushed.")
+        contents = repo.get_contents(file_path)
+        sha = contents.sha
 
-            file_path = f"auto_pr_files/{shortid}_{ts}.md"
-            content = f"# Auto PR\nThis PR was auto-generated at {datetime.now(timezone.utc).isoformat()} UTC\n"
-            repo.create_file(path=file_path, message=f"Add {file_path}", content=content, branch=branch_name)
 
-            pr = repo.create_pull(
-                title=f"Auto PR {ts}-{shortid}",
-                body=f"Auto-generated PR {i}",
-                head=branch_name,
-                base=repo.default_branch,
-            )
-            created_pr_numbers.append(pr.number)
-            print(f"[{i+1}/{total_actions}] Created PR #{pr.number}")
+def simulate_pull_requests():
+    print(f"Simulating {PULL_REQUESTS} pull requests...")
+    for i in range(PULL_REQUESTS):
+        print(f"🟢 PR simulated #{i+1}")
 
-        elif action == "issue":
-            issue = repo.create_issue(
-                title=f"Auto Issue #{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{i}",
-                body=f"Auto-generated issue {i} at {datetime.now(timezone.utc).isoformat()} UTC",
-            )
-            print(f"[{i+1}/{total_actions}] Created Issue #{issue.number}")
 
-        else:  # review
-            pulls = list(repo.get_pulls(state="open"))
-            if not pulls:
-                # create a tiny PR to have something to review
-                ts = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-                shortid = uuid.uuid4().hex[:6]
-                branch_name = f"auto/pr/{ts}/{shortid}"
-                source = repo.get_branch(repo.default_branch)
-                repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=source.commit.sha)
-                file_path = f"auto_pr_files/{shortid}_{ts}.md"
-                repo.create_file(path=file_path, message=f"Add {file_path}", content="Temp PR for review", branch=branch_name)
-                pr = repo.create_pull(title=f"Auto PR for review {ts}", body="temp", head=branch_name, base=repo.default_branch)
-                pulls = [pr]
-                print(f"[{i+1}/{total_actions}] Created PR #{pr.number} (for review)")
+def simulate_code_reviews():
+    print(f"Simulating {CODE_REVIEWS} code reviews...")
+    for i in range(CODE_REVIEWS):
+        print(f"🟡 Code review simulated #{i+1}")
 
-            pr = random.choice(pulls)
-            event = random.choice(["APPROVE", "COMMENT", "REQUEST_CHANGES"])
-            pr.create_review(body=f"Auto review {i} - {event}", event=event)
-            print(f"[{i+1}/{total_actions}] Created review on PR #{pr.number} event={event}")
 
-    except Exception as e:
-        print(f"[{i+1}/{total_actions}] ERROR doing {action}: {e}")
+def simulate_issues():
+    print(f"Simulating {ISSUES} issues...")
+    for i in range(ISSUES):
+        print(f"🔵 Issue simulated #{i+1}")
 
-    # small random delay to avoid huge bursts
-    time.sleep(random.uniform(0.5, 1.5))
 
-print("Done. Actions created:", total_actions)
+if __name__ == "__main__":
+    simulate_commits()
+    simulate_pull_requests()
+    simulate_code_reviews()
+    simulate_issues()
+    print("✅ Daily activity simulation completed successfully!")
