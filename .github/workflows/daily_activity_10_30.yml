@@ -1,38 +1,64 @@
-name: Daily profile boost at 10:30 AM IST
+name: Daily GitHub Activity
 
-# 10:30 AM IST = 05:00 UTC
 on:
   schedule:
-    - cron: '0 5 * * *'
+    - cron: "30 5 * * *"  # Runs every day at 10:30 AM IST (UTC +5:30)
   workflow_dispatch:
 
-permissions:
-  contents: write   # needed for create_file/git refs via API
-  pull-requests: write
-  issues: write
-
 jobs:
-  daily_activity:
+  simulate-activity:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo (with PAT)
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_TOKEN }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: 3.x
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install PyGithub
+        run: pip install PyGithub
 
-      - name: Run daily activity script
+      - name: Simulate GitHub Activity
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          REPO_NAME: "LittleCodr/profile-booster"
-        run: python .github/scripts/daily_activity.py
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: "LittleCodr/profile-booster"
+          GITHUB_EMAIL: "mayankheroagrawal25@gmail.com"
+        run: |
+          python3 <<EOF
+          from github import Github
+          import random
+
+          g = Github("${{ secrets.GITHUB_TOKEN }}")
+          repo = g.get_repo("LittleCodr/profile-booster")
+
+          # Simulate commits
+          commits = 20
+          for i in range(commits):
+              with open("dummy_file.txt", "a") as f:
+                  f.write(f"Commit {i}\\n")
+              repo.update_file(
+                  path="dummy_file.txt",
+                  message=f"Commit {i}",
+                  content=open("dummy_file.txt").read(),
+                  sha=repo.get_contents("dummy_file.txt").sha
+              )
+
+          # Simulate pull requests
+          pull_requests = 400  # <--- CHANGE THIS VALUE for PR count
+          for i in range(pull_requests):
+              print(f"Simulated PR #{i+1}")
+
+          # Simulate code reviews
+          code_reviews = 250
+          for i in range(code_reviews):
+              print(f"Simulated Code Review #{i+1}")
+
+          # Simulate issues
+          issues = 150
+          for i in range(issues):
+              print(f"Simulated Issue #{i+1}")
+
+          print("✅ Daily activity simulation completed!")
+          EOF
