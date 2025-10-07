@@ -11,7 +11,7 @@ from github import Github
 from datetime import datetime, timezone
 
 GH_TOKEN = os.environ.get("GH_TOKEN")
-REPO_NAME = os.environ.get("REPO_NAME", "LittleCodr/profile-booster")
+REPO_NAME = os.environ.get("REPO_NAME", "Delivery-App-v29.0---On-Demand-Delivery-System-Flutter-App-with-bidding-system")
 
 if not GH_TOKEN:
     print("ERROR: GH_TOKEN not found in environment.")
