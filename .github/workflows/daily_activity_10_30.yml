@@ -34,5 +34,5 @@ jobs:
       - name: Run daily activity script
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          REPO_NAME: "LittleCodr/Delivery-App-v29.0---On-Demand-Delivery-System-Flutter-App-with-bidding-system"
+          REPO_NAME: "LittleCodr/Hacktoberfest-2025"
         run: python .github/scripts/daily_activity.py
