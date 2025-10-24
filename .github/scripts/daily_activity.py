@@ -38,12 +38,12 @@ for i in range(total_actions):
             repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=source.commit.sha)
 
             file_path = f"auto_pr_files/{shortid}_{ts}.md"
-            content = f"# Auto PR\nThis PR was auto-generated at {datetime.now(timezone.utc).isoformat()} UTC\n"
+            content = f"# Auto PR\nThis PR was generated at {datetime.now(timezone.utc).isoformat()} UTC\n"
             repo.create_file(path=file_path, message=f"Add {file_path}", content=content, branch=branch_name)
 
             pr = repo.create_pull(
                 title=f"Auto PR {ts}-{shortid}",
-                body=f"Auto-generated PR {i}",
+                body=f"PR {i}",
                 head=branch_name,
                 base=repo.default_branch,
             )
@@ -52,8 +52,8 @@ for i in range(total_actions):
 
         elif action == "issue":
             issue = repo.create_issue(
-                title=f"Auto Issue #{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{i}",
-                body=f"Auto-generated issue {i} at {datetime.now(timezone.utc).isoformat()} UTC",
+                title=f"Issue #{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{i}",
+                body=f"generated issue {i} at {datetime.now(timezone.utc).isoformat()} UTC",
             )
             print(f"[{i+1}/{total_actions}] Created Issue #{issue.number}")
 
@@ -68,13 +68,13 @@ for i in range(total_actions):
                 repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=source.commit.sha)
                 file_path = f"auto_pr_files/{shortid}_{ts}.md"
                 repo.create_file(path=file_path, message=f"Add {file_path}", content="Temp PR for review", branch=branch_name)
-                pr = repo.create_pull(title=f"Auto PR for review {ts}", body="temp", head=branch_name, base=repo.default_branch)
+                pr = repo.create_pull(title=f" PR for review {ts}", body="temp", head=branch_name, base=repo.default_branch)
                 pulls = [pr]
                 print(f"[{i+1}/{total_actions}] Created PR #{pr.number} (for review)")
 
             pr = random.choice(pulls)
             event = random.choice(["APPROVE", "COMMENT", "REQUEST_CHANGES"])
-            pr.create_review(body=f"Auto review {i} - {event}", event=event)
+            pr.create_review(body=f"review {i} - {event}", event=event)
             print(f"[{i+1}/{total_actions}] Created review on PR #{pr.number} event={event}")
 
     except Exception as e:
